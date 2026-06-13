@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<link rel="manifest" href="manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HyperAgent · Multi‑Agente HyperLab</title>
+...  <!DOCTYPE html>
+<html lang="es">
+<head>
+<link rel="manifest" href="manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HyperAgent · Multi‑Agente HyperLab</title>
+<style>
+  :root {
+    --bg: #0a0c0f;
+    --surface: #13171d;
+    --surface2: #1a1f28;
+    --border: #252c36;
+    --text: #d0d5dd;
+    --text2: #8892a0;
+    --accent: #00e5a0;
+    --accent2: #00b8d4;
+    --warn: #f59e0b;
+    --error: #ef4444;
+    --success: #10b981;
+    --font: 'Segoe UI', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* ========== SIDEBAR ========== */
+  #sidebar {
+    width: 320px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 16px;
+    gap: 18px;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  #sidebar h2 {
+    font-size: 1.3em;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .config-section {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .config-section label {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text2);
+    font-weight: 600;
+  }
+  .config-section input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 0.8em;
+    outline: none;
+    transition: border 0.2s;
+  }
+  .config-section input:focus {
+    border-color: var(--accent);
+  }
+  .model-badge {
+    display: inline-block;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 0.7em;
+    font-family: var(--mono);
+    margin: 2px;
+  }
+  .model-badge.free {
+    border-color: var(--success);
+    color: var(--success);
+  }
+  .model-badge.paid {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .model-badge.reasoner {
+    border-color: #a78bfa;
+    color: #a78bfa;
+  }
+
+  /* ========== MAIN ========== */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Top bar */
+  #topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  #topbar .level-selector {
+    display: flex;
+    gap: 4px;
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 3px;
+  }
+  #topbar .level-btn {
+    padding: 8px 14px;
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.8em;
+    transition: all 0.2s;
+  }
+  #topbar .level-btn.active {
+    background: var(--accent);
+    color: #000;
+  }
+  #topbar .level-btn:hover:not(.active) {
+    background: var(--border);
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .status-dot.online { background: var(--success); }
+  .status-dot.offline { background: var(--error); }
+
+  /* Content area */
+  #content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 20px;
+    gap: 18px;
+  }
+
+  /* Query input */
+  #query-area {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  #query-area textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px;
+    border-radius: 8px;
+    font-family: var(--font);
+    font-size: 0.9em;
+    resize: vertical;
+    min-height: 60px;
+    outline: none;
+  }
+  #query-area textarea:focus {
+    border-color: var(--accent);
+  }
+  #sources-area textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 10px;
+    border-radius: 8px;
+    font-family: var(--mono);
+    font-size: 0.75em;
+    resize: vertical;
+    min-height: 60px;
+    outline: none;
+  }
+  #run-btn {
+    align-self: flex-end;
+    padding: 10px 28px;
+    background: linear-gradient(135deg, var(--accent), #00c98d);
+    border: none;
+    border-radius: 8px;
+    color: #000;
+    font-weight: 700;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  #run-btn:hover { opacity: 0.85; }
+  #run-btn:active { transform: scale(0.97); }
+  #run-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* Results */
+  .result-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .result-card h3 {
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .result-card pre {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    font-family: var(--mono);
+    font-size: 0.75em;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .cost-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7em;
+    font-weight: 600;
+    background: #1a2a1f;
+    color: var(--success);
+  }
+  .step-indicator {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 0.8em;
+    color: var(--text2);
+  }
+  .step-indicator .step {
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    font-size: 0.75em;
+  }
+  .step-indicator .step.done {
+    border-color: var(--success);
+    color: var(--success);
+  }
+  .step-indicator .step.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    animation: pulse 1s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  /* Footer */
+  #footer {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 8px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.7em;
+    color: var(--text2);
+    font-family: var(--mono);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    body { flex-direction: column; }
+    #sidebar { width: 100%; max-height: 45vh; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <h2>⚡ HyperAgent</h2>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span class="status-dot online" id="api-status-dot"></span>
+    <span style="font-size:0.8em;color:var(--text2);" id="api-status-text">Sin configurar</span>
+  </div>
+
+  <div class="config-section">
+    <label>🔑 DeepSeek API Key</label>
+    <input type="password" id="deepseek-key" placeholder="sk-..." autocomplete="off">
+    <span style="font-size:0.65em;color:var(--warn);">⚠️ Puede requerir proxy CORS</span>
+  </div>
+
+  <div class="config-section">
+    <label>🔑 OpenRouter API Key</label>
+    <input type="password" id="openrouter-key" placeholder="sk-or-..." autocomplete="off">
+    <span style="font-size:0.65em;color:var(--success);">✅ CORS habilitado</span>
+  </div>
+
+  <div class="config-section">
+    <label>🧩 Pool de modelos detectados</label>
+    <div id="model-pool" style="display:flex;flex-wrap:wrap;gap:4px;">
+      <span class="model-badge paid">deepseek-chat</span>
+      <span class="model-badge reasoner">deepseek-reasoner</span>
+      <span class="model-badge free">llama-3.1-8b (free)</span>
+      <span class="model-badge free">mistral-7b (free)</span>
+    </div>
+  </div>
+
+  <div class="config-section">
+    <label>📊 Estadísticas de sesión</label>
+    <div style="font-size:0.7em;font-family:var(--mono);">
+      <div>Trabajos: <span id="stat-jobs">0</span></div>
+      <div>Coste total: <span id="stat-cost">$0.0000</span></div>
+      <div>Tokens ahorrados: <span id="stat-saved">0</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="topbar">
+    <span style="font-weight:700;font-size:0.9em;">Nivel:</span>
+    <div class="level-selector" id="level-selector">
+      <button class="level-btn active" data-level="auto">🤖 Auto</button>
+      <button class="level-btn" data-level="directo">⚡ Directo</button>
+      <button class="level-btn" data-level="asistido">🔍 Asistido</button>
+      <button class="level-btn" data-level="verificado">🛡️ Verificado</button>
+    </div>
+    <span style="margin-left:auto;font-size:0.75em;color:var(--text2);" id="model-used">—</span>
+  </div>
+
+  <div id="content">
+    <!-- Query area -->
+    <div id="query-area">
+      <textarea id="query-input" placeholder="Escribe tu consulta aquí... Ej: Analiza la viabilidad de un sistema multi-agente para búsquedas científicas"></textarea>
+      <details id="sources-area" style="margin-top:4px;">
+        <summary style="cursor:pointer;font-size:0.8em;color:var(--accent);">📎 Añadir fuentes (URL: contenido)</summary>
+        <textarea id="sources-input" placeholder="https://ejemplo.com: Contenido de la página...&#10;https://otra-fuente.org: Más contenido..." style="margin-top:8px;"></textarea>
+      </details>
+      <button id="run-btn" onclick="runPipeline()">▶ Ejecutar HyperAgent</button>
+    </div>
+
+    <!-- Results container -->
+    <div id="results-container"></div>
+  </div>
+
+  <div id="footer">
+    <span>HyperLab v0.1 · Hypercode v2.1</span>
+    <span>Tokens: <span id="footer-tokens">—</span> | Coste: <span id="footer-cost">$0.0000</span></span>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// HYPERAGENT · Motor completo en JavaScript
+// ============================================================
+
+// ---------- GUARDIANES ----------
+const GUARDIANS = {
+  seed: 42,
+  G_F_scaled: 1.16638,
+  G_N_scaled: 6.6743,
+  framework: 'hypercode_v2.1'
+};
+
+// ---------- MODELOS CONFIGURADOS ----------
+const MODEL_REGISTRY = {
+  // DeepSeek directo
+  'deepseek-chat': {
+    provider: 'deepseek',
+    endpoint: 'https://api.deepseek.com/v1/chat/completions',
+    costIn: 0.14,
+    costOut: 0.28,
+    maxCtx: 65536,
+    capabilities: ['extraction', 'reasoning'],
+    free: false
+  },
+  'deepseek-reasoner': {
+    provider: 'deepseek',
+    endpoint: 'https://api.deepseek.com/v1/chat/completions',
+    costIn: 0.55,
+    costOut: 2.19,
+    maxCtx: 65536,
+    capabilities: ['deep_reasoning'],
+    free: false
+  },
+  // OpenRouter
+  'meta-llama/llama-3.1-8b-instruct:free': {
+    provider: 'openrouter',
+    endpoint: 'https://openrouter.ai/api/v1/chat/completions',
+    costIn: 0,
+    costOut: 0,
+    maxCtx: 8192,
+    capabilities: ['extraction'],
+    free: true
+  },
+  'mistralai/mistral-7b-instruct:free': {
+    provider: 'openrouter',
+    endpoint: 'https://openrouter.ai/api/v1/chat/completions',
+    costIn: 0,
+    costOut: 0,
+    maxCtx: 8192,
+    capabilities: ['extraction'],
+    free: true
+  },
+  'deepseek/deepseek-chat': {
+    provider: 'openrouter',
+    endpoint: 'https://openrouter.ai/api/v1/chat/completions',
+    costIn: 0.14,
+    costOut: 0.28,
+    maxCtx: 65536,
+    capabilities: ['extraction', 'reasoning'],
+    free: false
+  },
+  'deepseek/deepseek-r1': {
+    provider: 'openrouter',
+    endpoint: 'https://openrouter.ai/api/v1/chat/completions',
+    costIn: 0.55,
+    costOut: 2.19,
+    maxCtx: 65536,
+    capabilities: ['deep_reasoning'],
+    free: false
+  }
+};
+
+// ---------- ESTADO GLOBAL ----------
+let totalCost = 0;
+let totalJobs = 0;
+let totalSavedTokens = 0;
+let currentLevel = 'auto';
+
+// ---------- UTILIDADES ----------
+function getApiKey(provider) {
+  if (provider === 'deepseek') return document.getElementById('deepseek-key').value.trim();
+  if (provider === 'openrouter') return document.getElementById('openrouter-key').value.trim();
+  return '';
+}
+
+function getAvailableModels() {
+  const models = [];
+  if (getApiKey('deepseek')) {
+    models.push('deepseek-chat', 'deepseek-reasoner');
+  }
+  if (getApiKey('openrouter')) {
+    models.push('meta-llama/llama-3.1-8b-instruct:free', 'mistralai/mistral-7b-instruct:free', 'deepseek/deepseek-chat', 'deepseek/deepseek-r1');
+  }
+  return models;
+}
+
+function selectBestModel(capability, minContext) {
+  const available = getAvailableModels();
+  let bestModel = null;
+  let bestCost = Infinity;
+  for (const modelName of available) {
+    const info = MODEL_REGISTRY[modelName];
+    if (!info) continue;
+    if (info.capabilities.includes(capability) && info.maxCtx >= minContext) {
+      const avgCost = (info.costIn + info.costOut) / 2;
+      if (avgCost < bestCost) {
+        bestCost = avgCost;
+        bestModel = modelName;
+      }
+    }
+  }
+  return bestModel || available[0] || 'deepseek/deepseek-chat';
+}
+
+function estimateTokens(text) {
+  // Fallback chars/4
+  return Math.ceil(text.length / 4);
+}
+
+function countTokens(text) {
+  return estimateTokens(text);
+}
+
+function validateHyperPack(pack) {
+  if (!pack.startsWith('[HP|')) {
+    return { veredicto: '⛔', error: 'Falta cabecera HP' };
+  }
+  const hasCompression = pack.includes('[COMPRESIÓN]:');
+  const hashMatch = pack.match(/\[HP\|[^|]*\|[^|]*\|[^|]*\|([a-f0-9]{4})\]/);
+  return {
+    veredicto: hasCompression ? '✅' : '⚠️',
+    hash4: hashMatch ? hashMatch[1] : 'xxxx',
+    sections: (pack.match(/\[.*?\]:/g) || []).length
+  };
+}
+
+function updateStats(cost, savedTokens) {
+  totalCost += cost;
+  totalJobs += 1;
+  totalSavedTokens += savedTokens;
+  document.getElementById('stat-jobs').textContent = totalJobs;
+  document.getElementById('stat-cost').textContent = '$' + totalCost.toFixed(4);
+  document.getElementById('stat-saved').textContent = totalSavedTokens;
+  document.getElementById('footer-cost').textContent = '$' + totalCost.toFixed(4);
+  document.getElementById('footer-tokens').textContent = totalSavedTokens;
+}
+
+function updateApiStatus() {
+  const hasDS = !!getApiKey('deepseek');
+  const hasOR = !!getApiKey('openrouter');
+  const dot = document.getElementById('api-status-dot');
+  const text = document.getElementById('api-status-text');
+  if (hasDS || hasOR) {
+    dot.className = 'status-dot online';
+    text.textContent = `${hasDS ? 'DeepSeek' : ''}${hasDS && hasOR ? ' + ' : ''}${hasOR ? 'OpenRouter' : ''} conectado`;
+  } else {
+    dot.className = 'status-dot offline';
+    text.textContent = 'Sin configurar';
+  }
+  // Actualizar pool visual
+  const poolDiv = document.getElementById('model-pool');
+  const models = getAvailableModels();
+  poolDiv.innerHTML = models.map(m => {
+    const info = MODEL_REGISTRY[m];
+    let cls = info.free ? 'free' : (info.capabilities.includes('deep_reasoning') ? 'reasoner' : 'paid');
+    return `<span class="model-badge ${cls}">${m.split('/').pop()}</span>`;
+  }).join('') || '<span style="font-size:0.7em;color:var(--text2);">Sin modelos</span>';
+}
+
+// Escuchar cambios en los inputs de API
+document.getElementById('deepseek-key').addEventListener('input', updateApiStatus);
+document.getElementById('openrouter-key').addEventListener('input', updateApiStatus);
+
+// ---------- LLAMADA A API ----------
+async function callLLM(modelName, messages, temperature = 0.3, maxTokens = 2000) {
+  const info = MODEL_REGISTRY[modelName];
+  if (!info) throw new Error(`Modelo desconocido: ${modelName}`);
+  const apiKey = getApiKey(info.provider);
+  if (!apiKey) throw new Error(`API key no configurada para ${info.provider}`);
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${apiKey}`
+  };
+  if (info.provider === 'openrouter') {
+    headers['HTTP-Referer'] = window.location.origin;
+    headers['X-Title'] = 'HyperAgent';
+  }
+  const payload = {
+    model: modelName,
+    messages: messages,
+    temperature: temperature,
+    max_tokens: maxTokens
+  };
+  const response = await fetch(info.endpoint, {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify(payload)
+  });
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`API error ${response.status}: ${errText}`);
+  }
+  const data = await response.json();
+  const content = data.choices[0].message.content;
+  const usage = data.usage || {};
+  const costIn = (info.costIn * (usage.prompt_tokens || 0)) / 1_000_000;
+  const costOut = (info.costOut * (usage.completion_tokens || 0)) / 1_000_000;
+  return { content, usage, cost: costIn + costOut, model: modelName };
+}
+
+// ---------- CLASIFICADOR DE COMPLEJIDAD ----------
+async function classifyComplexity(query) {
+  const model = selectBestModel('extraction', 100);
+  const prompt = `Clasifica esta consulta en 'directo', 'asistido' o 'verificado' según requiera búsqueda o verificación rigurosa. Responde solo una palabra.
+Consulta: ${query}`;
+  const result = await callLLM(model, [{ role: 'user', content: prompt }], 0.1, 5);
+  const level = result.content.trim().toLowerCase();
+  return ['directo', 'asistido', 'verificado'].includes(level) ? level : 'asistido';
+}
+
+// ---------- MINION EXTRACTOR ----------
+async function runMinion(url, content) {
+  const model = selectBestModel('extraction', 4000);
+  const prompt = `Eres un minion extractor. Resume el siguiente contenido en un HyperPack L2.  
+Formato OBLIGATORIO:
+[HP|v1|hoy|fuente|hash4]
+[FUENTE]: url=${url}; titulo=... ;;
+[DATOS_CLAVE]: hecho1; hecho2; ... ;;
+[RESUMEN]: texto breve (máx 2 frases) ;;
+[COMPRESIÓN]: tok_orig=...; tok_pack=...; ratio=...×; nivel=L2
+
+Contenido:
+${content.slice(0, 3000)}`;
+  const result = await callLLM(model, [{ role: 'user', content: prompt }], 0.3, 500);
+  return { pack: result.content, cost: result.cost, model: result.model };
+}
+
+// ---------- SINTETIZADOR ----------
+async function synthesize(packs, level) {
+  const capability = level === 'verificado' ? 'deep_reasoning' : 'reasoning';
+  const model = selectBestModel(capability, 8000);
+  const packsText = packs.join('
+---
+');
+  const prompt = `Eres el sintetizador principal. Combina los siguientes HyperPacks en un informe final coherente.
+Añade una sección de conclusiones y, si es nivel verificado, una verificación de consistencia.
+Nivel: ${level}
+
+HyperPacks:
+${packsText}`;
+  const result = await callLLM(model, [{ role: 'user', content: prompt }], 0.4, 1500);
+  return { synthesis: result.content, cost: result.cost, model: result.model };
+}
+
+// ---------- RENDER RESULTADOS ----------
+function addResultCard(title, content, type = 'info') {
+  const container = document.getElementById('results-container');
+  const card = document.createElement('div');
+  card.className = 'result-card';
+  const icon = type === 'pack' ? '📦' : type === 'synthesis' ? '📊' : type === 'error' ? '⛔' : '📌';
+  card.innerHTML = `<h3>${icon} ${title}</h3><pre>${escapeHtml(content)}</pre>`;
+  container.prepend(card);
+}
+
+function addStepIndicator(steps) {
+  const container = document.getElementById('results-container');
+  const div = document.createElement('div');
+  div.className = 'step-indicator';
+  div.innerHTML = steps.map((s, i) => {
+    let cls = '';
+    if (s.status === 'done') cls = 'done';
+    else if (s.status === 'active') cls = 'active';
+    return `<span class="step ${cls}">${s.label}</span>${i < steps.length - 1 ? ' → ' : ''}`;
+  }).join('');
+  container.prepend(div);
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ---------- PIPELINE PRINCIPAL ----------
+async function runPipeline() {
+  const query = document.getElementById('query-input').value.trim();
+  const sourcesText = document.getElementById('sources-input').value.trim();
+  if (!query) {
+    addResultCard('Error', 'Debes escribir una consulta.', 'error');
+    return;
+  }
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Ejecutando...';
+  document.getElementById('results-container').innerHTML = '';
+
+  try {
+    updateApiStatus();
+    const available = getAvailableModels();
+    if (available.length === 0) {
+      throw new Error('No hay APIs configuradas. Ingresa al menos una clave en el panel lateral.');
+    }
+
+    // Paso 1: Clasificar complejidad
+    addStepIndicator([{ label: 'Clasificando', status: 'active' }, { label: 'Minions', status: '' }, { label: 'Síntesis', status: '' }]);
+    let level = currentLevel;
+    if (level === 'auto') {
+      level = await classifyComplexity(query);
+    }
+    document.getElementById('model-used').textContent = `Nivel: ${level.toUpperCase()}`;
+    addResultCard('Complejidad detectada', `Nivel: ${level.toUpperCase()} (modelo clasificador: automático)`);
+
+    // Actualizar steps
+    document.getElementById('results-container').querySelector('.step-indicator')?.remove();
+    addStepIndicator([{ label: 'Clasificado', status: 'done' }, { label: 'Minions', status: 'active' }, { label: 'Síntesis', status: '' }]);
+
+    if (level === 'directo') {
+      const model = selectBestModel('reasoning', 2000);
+      const result = await callLLM(model, [{ role: 'user', content: query }]);
+      addStepIndicator([{ label: 'Clasificado', status: 'done' }, { label: 'Directo', status: 'done' }, { label: 'Síntesis', status: 'done' }]);
+      addResultCard('Respuesta directa', result.content);
+      updateStats(result.cost, 0);
+      document.getElementById('model-used').textContent = `Modelo: ${result.model}`;
+    } else {
+      // Parsear fuentes
+      const urlsDict = {};
+      if (sourcesText) {
+        for (const line of sourcesText.split('
+')) {
+          const idx = line.indexOf(':');
+          if (idx > 0) {
+            const url = line.slice(0, idx).trim();
+            const content = line.slice(idx + 1).trim();
+            if (url && content) urlsDict[url] = content;
+          }
+        }
+      }
+      if (Object.keys(urlsDict).length === 0) {
+        // Sin fuentes: usar query como única fuente simulada
+        urlsDict['consulta_directa'] = query;
+      }
+
+      // Ejecutar minions en paralelo
+      const minionPromises = Object.entries(urlsDict).map(([url, content]) => {
+        return runMinion(url, content).then(r => ({ url, ...r }));
+      });
+      const minionResults = await Promise.all(minionPromises);
+
+      // Mostrar packs
+      let minionCost = 0;
+      const validPacks = [];
+      for (const mr of minionResults) {
+        const validation = validateHyperPack(mr.pack);
+        const status = validation.veredicto === '✅' ? '✅' : '⚠️';
+        addResultCard(`Minion · ${mr.url.slice(0, 50)}... [${status}]`, mr.pack, 'pack');
+        if (validation.veredicto !== '⛔') {
+          validPacks.push(mr.pack);
+        }
+        minionCost += mr.cost;
+      }
+
+      // Síntesis
+      document.getElementById('results-container').querySelector('.step-indicator')?.remove();
+      addStepIndicator([{ label: 'Clasificado', status: 'done' }, { label: 'Minions', status: 'done' }, { label: 'Síntesis', status: 'active' }]);
+      const synthResult = await synthesize(validPacks, level);
+
+      addStepIndicator([{ label: 'Clasificado', status: 'done' }, { label: 'Minions', status: 'done' }, { label: 'Síntesis', status: 'done' }]);
+      addResultCard(`Informe final · ${synthResult.model}`, synthResult.synthesis, 'synthesis');
+
+      const totalCost = minionCost + synthResult.cost;
+      const savedTokens = estimateTokens(validPacks.join('
+')) * 0.8; // estimación ahorro HyperPack
+      updateStats(totalCost, Math.round(savedTokens));
+      document.getElementById('model-used').textContent = `Sintetizador: ${synthResult.model}`;
+    }
+
+    document.getElementById('footer-tokens').textContent = totalSavedTokens;
+    document.getElementById('footer-cost').textContent = '$' + totalCost.toFixed(4);
+
+  } catch (err) {
+    addResultCard('Error', err.message, 'error');
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '▶ Ejecutar HyperAgent';
+  }
+}
+
+// ---------- SELECTOR DE NIVEL ----------
+document.getElementById('level-selector').addEventListener('click', (e) => {
+  if (e.target.classList.contains('level-btn')) {
+    document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    currentLevel = e.target.dataset.level;
+    document.getElementById('model-used').textContent = `Nivel: ${currentLevel.toUpperCase()}`;
+  }
+});
+
+// ---------- INICIALIZACIÓN ----------
+updateApiStatus();
+document.getElementById('model-used').textContent = '—';
+console.log('🚀 HyperAgent listo. Hypercode v2.1 · Guardianes:', GUARDIANS);
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+}
+</script>
+
+</body>
+
+</html> ...
+
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+}
+</script>
+
+</body>
+</html>
